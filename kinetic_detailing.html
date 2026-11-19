@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KINETIC DETAILING — Детейлинг центр в Москве</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            base: {
+              950: '#0b0c0e',
+              900: '#111317',
+              850: '#171a20',
+              800: '#1f232b',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #0b0c0e;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    /* Точки-разделители в строках прайса как на реальных студийных сайтах */
+    .price-dots {
+      flex: 1;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.22);
+      margin: 0 12px 5px;
+      min-width: 24px;
+    }
+    .quiz-option.selected {
+      background-color: #ffffff;
+      color: #0b0c0e;
+      border-color: #ffffff;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-black">
+
+  <!-- Уведомление об отправке заявки -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3.5 rounded-xl bg-white text-black text-xs sm:text-sm font-semibold shadow-2xl opacity-0 pointer-events-none transition-all duration-300 -translate-y-4">
+    Заявка отправлена
+  </div>
+
+  <!-- Модальное окно обратного звонка -->
+  <div id="callback-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-2xl bg-base-900 border border-white/10 p-6 sm:p-8 relative shadow-2xl">
+      <button type="button" id="close-callback-btn" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 text-neutral-300 flex items-center justify-center text-base">
+        ✕
+      </button>
+      <h3 class="text-xl sm:text-2xl font-bold text-white">Обратный звонок</h3>
+      <p class="text-sm text-neutral-400 mt-1.5">
+        Заполните данные ниже и руководитель студии свяжется с вами:
+      </p>
+
+      <form id="callback-form" class="space-y-4 mt-5">
+        <div class="grid grid-cols-3 gap-2" id="modal-channel-group">
+          <button type="button" data-ch="Телефон" class="quiz-option selected py-2.5 px-2 rounded-xl border border-white/15 text-xs font-semibold transition">
+            Позвонить
+          </button>
+          <button type="button" data-ch="WhatsApp" class="quiz-option py-2.5 px-2 rounded-xl border border-white/15 text-neutral-300 text-xs font-semibold transition">
+            WhatsApp
+          </button>
+          <button type="button" data-ch="Telegram" class="quiz-option py-2.5 px-2 rounded-xl border border-white/15 text-neutral-300 text-xs font-semibold transition">
+            Telegram
+          </button>
+        </div>
+
+        <input
+          type="text"
+          id="cb-name"
+          placeholder="Ваше имя"
+          required
+          class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+        />
+        <input
+          type="tel"
+          id="cb-phone"
+          placeholder="+7 (___) ___-__-__"
+          required
+          class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+        />
+
+        <label class="flex items-start gap-2.5 text-xs text-neutral-400 cursor-pointer">
+          <input type="checkbox" checked required class="mt-0.5 accent-white rounded" />
+          <span>Я даю согласие на обработку своих персональных данных</span>
+        </label>
+
+        <button type="submit" class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+          Отправить заявку
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Лайтбокс просмотра фото из галереи -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+    <button type="button" id="close-lightbox-btn" class="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg">
+      ✕
+    </button>
+    <div class="max-w-4xl w-full space-y-3">
+      <img id="lightbox-img" src="" alt="" class="w-full max-h-[78vh] object-contain rounded-2xl bg-base-900" />
+      <div id="lightbox-caption" class="text-center text-sm text-neutral-300 font-medium"></div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       1. ШАПКА САЙТА (HEADER)
+       ===================================================================== -->
+  <header class="fixed top-0 inset-x-0 z-40 bg-base-950/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
+      <!-- Логотип -->
+      <a href="#top" class="flex items-center gap-3">
+        <span class="font-extrabold text-lg sm:text-xl tracking-[0.14em] uppercase text-white">KINETIC</span>
+        <span class="hidden sm:inline-block text-[11px] uppercase tracking-[0.2em] text-neutral-400 border-l border-white/15 pl-3">Detailing</span>
+      </a>
+
+      <!-- Навигация -->
+      <nav class="hidden md:flex items-center gap-8 text-sm text-neutral-300">
+        <a href="#top" class="hover:text-white transition">Главная</a>
+        <a href="#services" class="hover:text-white transition">Услуги</a>
+        <a href="#pricelist" class="hover:text-white transition">Прайс-лист</a>
+        <a href="#gallery" class="hover:text-white transition">Галерея работ</a>
+        <a href="#contacts" class="hover:text-white transition">Контакты</a>
+      </nav>
+
+      <!-- Телефон и кнопка -->
+      <div class="flex items-center gap-3 sm:gap-5">
+        <a href="tel:+74955076318" class="hidden sm:block text-sm font-semibold text-white hover:text-neutral-300 transition">
+          +7 (495) 507-63-18
+        </a>
+        <button type="button" data-open-callback class="px-4 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs sm:text-sm transition">
+          Позвонить
+        </button>
+        <button type="button" id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-white/5 text-white" aria-label="Меню">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Мобильное меню -->
+    <div id="mobile-menu" class="hidden md:hidden bg-base-900 border-b border-white/10 px-4 py-4 space-y-2.5">
+      <a href="#top" class="mob-item block py-1.5 text-sm text-neutral-200">Главная</a>
+      <a href="#services" class="mob-item block py-1.5 text-sm text-neutral-200">Услуги</a>
+      <a href="#pricelist" class="mob-item block py-1.5 text-sm text-neutral-200">Прайс-лист</a>
+      <a href="#gallery" class="mob-item block py-1.5 text-sm text-neutral-200">Галерея работ</a>
+      <a href="#contacts" class="mob-item block py-1.5 text-sm text-neutral-200">Контакты</a>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       2. ПЕРВЫЙ ЭКРАН (HERO) — ЧИСТЫЙ, БЕЗ ЛИШНЕГО ШУМА
+       ===================================================================== -->
+  <section id="top" class="relative min-h-[82vh] flex items-center pt-24 pb-16 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img
+        src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1920&q=85"
+        onerror="this.src='https://placehold.co/1920x1080/111317/ffffff?text=KINETIC+DETAILING'"
+        alt="Детейлинг центр"
+        class="w-full h-full object-cover object-center opacity-40"
+      />
+      <div class="absolute inset-0 bg-gradient-to-r from-base-950 via-base-950/85 to-base-950/40"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-base-950 via-transparent to-base-950/50"></div>
+    </div>
+
+    <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 w-full">
+      <div class="max-w-2xl space-y-6">
+        <p class="text-xs sm:text-sm uppercase tracking-[0.2em] text-neutral-400">
+          Ежедневно с 11:00 до 20:00 • По предварительной записи
+        </p>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white uppercase tracking-tight leading-[1.08]">
+          Детейлинг центр в Москве
+        </h1>
+
+        <p class="text-base sm:text-xl text-neutral-300 font-normal leading-relaxed">
+          Профессиональный уход и защита вашего автомобиля
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3.5 pt-2">
+          <a href="#quiz" class="px-7 py-4 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm sm:text-base transition text-center">
+            Рассчитать стоимость
+          </a>
+          <button type="button" data-open-callback class="px-7 py-4 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-white font-semibold text-sm sm:text-base transition">
+            Записаться
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       3. ПОШАГОВЫЙ КВИЗ РАСЧЁТА СТОИМОСТИ (1/3 -> 2/3 -> 3/3)
+       ===================================================================== -->
+  <section id="quiz" class="py-16 sm:py-24 bg-base-900 border-t border-white/10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="rounded-2xl bg-base-850 border border-white/10 p-6 sm:p-10 shadow-xl">
+        <div class="flex items-start justify-between gap-4 border-b border-white/10 pb-6">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-white leading-snug">
+              Получите расчёт стоимости услуги от руководителя детейлинг центра
+            </h2>
+            <p class="text-sm text-neutral-400 mt-1.5">
+              Ответьте на 3 коротких вопроса — подготовим точную смету под ваш автомобиль
+            </p>
+          </div>
+          <div id="quiz-step-indicator" class="px-3.5 py-1.5 rounded-lg bg-white/10 text-white font-bold text-sm shrink-0">
+            1 / 3
+          </div>
+        </div>
+
+        <!-- Шаг 1: Выбор услуги -->
+        <div id="quiz-step-1" class="pt-6 space-y-5">
+          <div class="text-base font-semibold text-white">1. Какая услуга интересует?</div>
+          <div class="grid sm:grid-cols-2 gap-3" id="quiz-services">
+            <button type="button" data-val="Оклейка антигравийной плёнкой" class="quiz-option selected p-4 rounded-xl border border-white/15 text-left text-sm font-semibold transition">
+              Оклейка антигравийной плёнкой
+            </button>
+            <button type="button" data-val="Детейлинг комплекс" class="quiz-option p-4 rounded-xl border border-white/15 text-left text-sm font-semibold text-neutral-200 hover:border-white/40 transition">
+              Детейлинг комплекс
+            </button>
+            <button type="button" data-val="Комплекс для нового авто" class="quiz-option p-4 rounded-xl border border-white/15 text-left text-sm font-semibold text-neutral-200 hover:border-white/40 transition">
+              Комплекс для нового авто
+            </button>
+            <button type="button" data-val="Полировка и керамика" class="quiz-option p-4 rounded-xl border border-white/15 text-left text-sm font-semibold text-neutral-200 hover:border-white/40 transition">
+              Полировка и керамика
+            </button>
+            <button type="button" data-val="Химчистка / Реставрация кожи" class="quiz-option p-4 rounded-xl border border-white/15 text-left text-sm font-semibold text-neutral-200 hover:border-white/40 transition">
+              Химчистка / Реставрация кожи
+            </button>
+            <button type="button" data-val="Нужна помощь с подбором" class="quiz-option p-4 rounded-xl border border-white/15 text-left text-sm font-semibold text-neutral-200 hover:border-white/40 transition">
+              Нужна помощь с подбором
+            </button>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="button" id="quiz-next-1" class="px-6 py-3 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+              Далее →
+            </button>
+          </div>
+        </div>
+
+        <!-- Шаг 2: Марка/модель и способ связи -->
+        <div id="quiz-step-2" class="hidden pt-6 space-y-5">
+          <div>
+            <label class="block text-base font-semibold text-white mb-2">2. Марка и модель автомобиля?</label>
+            <input
+              type="text"
+              id="quiz-car-model"
+              placeholder="Например: BMW X5, Porsche Cayenne, Geely Monjaro"
+              class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+            />
+          </div>
+
+          <div>
+            <div class="text-sm font-semibold text-neutral-300 mb-2.5">Куда удобнее отправить расчёт стоимости?</div>
+            <div class="grid grid-cols-3 gap-2.5" id="quiz-channels">
+              <button type="button" data-val="WhatsApp" class="quiz-option selected py-3 px-3 rounded-xl border border-white/15 text-xs sm:text-sm font-semibold transition">
+                в WhatsApp
+              </button>
+              <button type="button" data-val="Telegram" class="quiz-option py-3 px-3 rounded-xl border border-white/15 text-neutral-200 text-xs sm:text-sm font-semibold transition">
+                в Telegram
+              </button>
+              <button type="button" data-val="По телефону" class="quiz-option py-3 px-3 rounded-xl border border-white/15 text-neutral-200 text-xs sm:text-sm font-semibold transition">
+                По телефону
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <button type="button" id="quiz-prev-2" class="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 font-semibold text-sm transition">
+              ← Назад
+            </button>
+            <button type="button" id="quiz-next-2" class="px-6 py-3 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+              Последний вопрос →
+            </button>
+          </div>
+        </div>
+
+        <!-- Шаг 3: Имя и телефон -->
+        <form id="quiz-step-3" class="hidden pt-6 space-y-4">
+          <div class="text-base font-semibold text-white">
+            3. Введите имя и номер телефона, после чего руководитель студии отправит расчёт
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-3.5">
+            <input
+              type="text"
+              id="quiz-name"
+              placeholder="Ваше имя"
+              required
+              class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+            />
+            <input
+              type="tel"
+              id="quiz-phone"
+              placeholder="+7 (___) ___-__-__"
+              required
+              class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+            />
+          </div>
+
+          <label class="flex items-start gap-2.5 text-xs text-neutral-400 cursor-pointer">
+            <input type="checkbox" checked required class="mt-0.5 accent-white rounded" />
+            <span>Я даю согласие на обработку своих персональных данных</span>
+          </label>
+
+          <div class="flex items-center justify-between pt-2">
+            <button type="button" id="quiz-prev-3" class="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 font-semibold text-sm transition">
+              ← Назад
+            </button>
+            <button type="submit" class="px-7 py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+              Получить расчёт
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       4. УСЛУГИ (4 ОСНОВНЫЕ КАТЕГОРИИ)
+       ===================================================================== -->
+  <section id="services" class="py-16 sm:py-24 bg-base-950 border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="max-w-3xl mb-12 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white uppercase tracking-tight">Услуги</h2>
+        <p class="text-sm sm:text-base text-neutral-400 leading-relaxed">
+          Индивидуальное обслуживание, гарантия результата, сертифицированная автохимия — чувствуйте себя свободно, мы говорим на одном языке. Оказание услуг выполняется исключительно по предварительной записи.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Карточка 1 -->
+        <a href="#pricelist" class="group rounded-2xl bg-base-900 border border-white/10 overflow-hidden hover:border-white/30 transition flex flex-col">
+          <div class="aspect-[4/3] overflow-hidden bg-base-850">
+            <img
+              src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=700&q=80"
+              onerror="this.src='https://placehold.co/600x450/171a20/ffffff?text=Detailing'"
+              alt="Детейлинг, кузов, салон"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+            <h3 class="text-lg font-bold text-white">Детейлинг, кузов, салон</h3>
+            <span class="text-xs font-semibold text-neutral-400 group-hover:text-white transition">Смотреть цены →</span>
+          </div>
+        </a>
+
+        <!-- Карточка 2 -->
+        <a href="#pricelist" class="group rounded-2xl bg-base-900 border border-white/10 overflow-hidden hover:border-white/30 transition flex flex-col">
+          <div class="aspect-[4/3] overflow-hidden bg-base-850">
+            <img
+              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=700&q=80"
+              onerror="this.src='https://placehold.co/600x450/171a20/ffffff?text=PPF+Film'"
+              alt="Антигравийная плёнка"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+            <h3 class="text-lg font-bold text-white">Антигравийная плёнка</h3>
+            <span class="text-xs font-semibold text-neutral-400 group-hover:text-white transition">Смотреть цены →</span>
+          </div>
+        </a>
+
+        <!-- Карточка 3 -->
+        <a href="#pricelist" class="group rounded-2xl bg-base-900 border border-white/10 overflow-hidden hover:border-white/30 transition flex flex-col">
+          <div class="aspect-[4/3] overflow-hidden bg-base-850">
+            <img
+              src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=700&q=80"
+              onerror="this.src='https://placehold.co/600x450/171a20/ffffff?text=Leather+Care'"
+              alt="Реставрация кожи"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+            <h3 class="text-lg font-bold text-white">Реставрация кожи</h3>
+            <span class="text-xs font-semibold text-neutral-400 group-hover:text-white transition">Смотреть цены →</span>
+          </div>
+        </a>
+
+        <!-- Карточка 4 -->
+        <a href="#pricelist" class="group rounded-2xl bg-base-900 border border-white/10 overflow-hidden hover:border-white/30 transition flex flex-col">
+          <div class="aspect-[4/3] overflow-hidden bg-base-850">
+            <img
+              src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=700&q=80"
+              onerror="this.src='https://placehold.co/600x450/171a20/ffffff?text=New+Car'"
+              alt="Комплексы для нового авто"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+            <h3 class="text-lg font-bold text-white">Комплексы для нового авто</h3>
+            <span class="text-xs font-semibold text-neutral-400 group-hover:text-white transition">Смотреть цены →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       5. ПРАЙС-ЛИСТ (СТРУКТУРИРОВАННЫЙ СПИСОК ПО КАТЕГОРИЯМ С ТОЧКАМИ)
+       ===================================================================== -->
+  <section id="pricelist" class="py-16 sm:py-24 bg-base-900 border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="max-w-3xl mb-12 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white uppercase tracking-tight">Прайс-лист</h2>
+        <p class="text-sm sm:text-base text-neutral-400 leading-relaxed">
+          Профессиональный подход и высокое качество выполняемых работ, вежливое общение и открытая атмосфера без скрытых доплат.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Блок 1: Детейлинг комплексы -->
+        <div class="rounded-2xl bg-base-850 border border-white/10 p-6 sm:p-7 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Детейлинг комплексы</h3>
+            <div class="space-y-3.5 text-sm">
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">K2 Optima (полировка + керамика)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 49 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">K3 Premium (кузов + салон)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 55 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">K4 Privilege (всё включено)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 93 000 ₽</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-callback class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition">
+            Подробнее и запись →
+          </button>
+        </div>
+
+        <!-- Блок 2: Оклейка антигравийной плёнкой -->
+        <div class="rounded-2xl bg-base-850 border border-white/10 p-6 sm:p-7 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Оклейка антигравийной плёнкой</h3>
+            <div class="space-y-3.5 text-sm">
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Фары, под ручками, зеркала</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 17 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Передняя часть автомобиля (зоны риска)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 90 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Весь автомобиль (глянец или мат)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 260 000 ₽</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-callback class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition">
+            Подробнее и запись →
+          </button>
+        </div>
+
+        <!-- Блок 3: Комплексы для нового авто -->
+        <div class="rounded-2xl bg-base-850 border border-white/10 p-6 sm:p-7 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Комплексы для нового автомобиля</h3>
+            <div class="space-y-3.5 text-sm">
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">NC1 Базовая защита (керамика + антидождь)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 39 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">NC2 Для нового авто (зоны риска + салон)</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 94 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">NC3 Полная защита кузова и интерьера</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 285 000 ₽</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-callback class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition">
+            Подробнее и запись →
+          </button>
+        </div>
+
+        <!-- Блок 4: Реставрация кожи и доп. услуги -->
+        <div class="rounded-2xl bg-base-850 border border-white/10 p-6 sm:p-7 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold text-white border-b border-white/10 pb-3">Реставрация кожи и дополнительные услуги</h3>
+            <div class="space-y-3.5 text-sm">
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Реставрация руля / подлокотника</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 5 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Реставрация сиденья</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 10 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Детейлинг моторного отсека</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 7 000 ₽</span>
+              </div>
+              <div class="flex items-baseline">
+                <span class="text-neutral-200">Детейлинг интерьера / Антидождь</span>
+                <span class="price-dots"></span>
+                <span class="font-bold text-white shrink-0">от 5 000 ₽</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" data-open-callback class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white transition">
+            Подробнее и запись →
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       6. БЛОК БЕСПЛАТНОЙ КОНСУЛЬТАЦИИ
+       ===================================================================== -->
+  <section class="py-16 sm:py-20 bg-base-950 border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="rounded-2xl bg-base-900 border border-white/10 p-6 sm:p-10 grid lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-7 space-y-3">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Бесплатная консультация</h2>
+          <p class="text-sm sm:text-base text-neutral-400 leading-relaxed">
+            Оставьте заявку, чтобы получить бесплатную консультацию и оценку стоимости работ для вашего автомобиля. Специалист KINETIC свяжется с вами, поможет подобрать оптимальное решение и подробно ответит на все вопросы.
+          </p>
+        </div>
+
+        <form id="consult-form" class="lg:col-span-5 space-y-3">
+          <input
+            type="tel"
+            id="consult-phone"
+            placeholder="+7 (___) ___-__-__"
+            required
+            class="w-full px-4 py-3.5 rounded-xl bg-base-950 border border-white/15 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-white"
+          />
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+            Получить консультацию
+          </button>
+          <label class="flex items-start gap-2 text-[11px] text-neutral-500 cursor-pointer">
+            <input type="checkbox" checked required class="mt-0.5 accent-white rounded" />
+            <span>Я даю согласие на обработку своих персональных данных</span>
+          </label>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       7. ГАЛЕРЕЯ РАБОТ (ЧИСТАЯ СЕТКА С ПРОСМОТРОМ ФОТО)
+       ===================================================================== -->
+  <section id="gallery" class="py-16 sm:py-24 bg-base-900 border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-end justify-between gap-4 mb-10">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white uppercase tracking-tight">Галерея работ</h2>
+        <span class="text-xs text-neutral-400">Нажмите на фото для увеличения</span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5" id="gallery-items">
+        <div data-caption="Porsche 911 — полная оклейка антигравийной плёнкой" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+01'" alt="Porsche 911" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="BMW M4 — полировка кузова и керамика" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+02'" alt="BMW M4" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="Mercedes-AMG G63 — матовый полиуретан" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+03'" alt="Mercedes G63" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="Audi Q8 — детейлинг интерьера и защита кожи" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+04'" alt="Салон Audi" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="Mercedes-AMG GT — комплекс K3 Premium" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+05'" alt="Mercedes GT" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="Audi RS6 — оклейка зон риска и антихром" class="gal-card aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+06'" alt="Audi RS6" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+
+        <!-- Дополнительные фото по кнопке «Смотреть ещё» -->
+        <div data-caption="Porsche Taycan — защита нового автомобиля NC2" class="gal-card extra-work hidden aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+07'" alt="Porsche Taycan" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="Range Rover — детейлинг-химчистка и керамика" class="gal-card extra-work hidden aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+08'" alt="Range Rover" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+        <div data-caption="BMW X6M — бронирование передней части" class="gal-card extra-work hidden aspect-[4/3] rounded-2xl overflow-hidden bg-base-850 cursor-pointer group">
+          <img src="https://images.unsplash.com/photo-1556189250-72ba954cfc2b?auto=format&fit=crop&w=900&q=85" onerror="this.src='https://placehold.co/800x600/171a20/ffffff?text=Work+09'" alt="BMW X6M" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        </div>
+      </div>
+
+      <div class="text-center mt-8">
+        <button type="button" id="show-more-works" class="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition">
+          Смотреть ещё
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       8. КОНТАКТЫ И ПОДВАЛ (FOOTER)
+       ===================================================================== -->
+  <footer id="contacts" class="py-16 sm:py-20 bg-base-950 border-t border-white/10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
+      <div class="grid md:grid-cols-12 gap-8 items-start">
+        <div class="md:col-span-6 space-y-4">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white uppercase tracking-tight">Контакты</h2>
+          <p class="text-sm text-neutral-400 leading-relaxed max-w-md">
+            Обращаем внимание, что оказание услуг и предварительный осмотр автомобилей в нашем центре выполняется исключительно по предварительной записи.
+          </p>
+
+          <div class="space-y-2.5 pt-2 text-sm">
+            <div>
+              <span class="text-neutral-500 block text-xs">Телефон:</span>
+              <a href="tel:+74955076318" class="text-lg font-bold text-white hover:text-neutral-300">+7 (495) 507-63-18</a>
+            </div>
+            <div>
+              <span class="text-neutral-500 block text-xs">Почта:</span>
+              <a href="mailto:centre@kineticdetailing.ru" class="text-white hover:underline">centre@kineticdetailing.ru</a>
+            </div>
+            <div>
+              <span class="text-neutral-500 block text-xs">Адрес студии:</span>
+              <span class="text-white">г. Москва, ул. Автозаводская, д. 23, корп. 3</span>
+            </div>
+            <div>
+              <span class="text-neutral-500 block text-xs">Режим работы:</span>
+              <span class="text-white">Ежедневно с 11:00 до 20:00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="md:col-span-6 rounded-2xl bg-base-900 border border-white/10 p-6 sm:p-8 space-y-4">
+          <h3 class="text-lg font-bold text-white">Запись на осмотр или услугу</h3>
+          <p class="text-xs text-neutral-400">Оставьте номер телефона — перезвоним или напишем в мессенджер</p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button type="button" data-open-callback class="flex-1 py-3.5 px-5 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-sm transition">
+              Заказать обратный звонок
+            </button>
+            <a href="#quiz" class="flex-1 py-3.5 px-5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition text-center">
+              Рассчитать стоимость
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+        <div>© 2026 KINETIC DETAILING. Все права защищены.</div>
+        <div class="flex gap-5">
+          <a href="#pricelist" class="hover:text-neutral-300">Прайс-лист</a>
+          <a href="#services" class="hover:text-neutral-300">Услуги</a>
+          <a href="#contacts" class="hover:text-neutral-300">Контакты</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       JAVASCRIPT: КВИЗ-РАСЧЁТ (3 ШАГА), МОДАЛКА ЗВОНКА И ГАЛЕРЕЯ
+       ========================================================================= -->
+  <script>
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 3600);
+    }
+
+    // 1. Мобильное меню
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    document.querySelectorAll('.mob-item').forEach(el => {
+      el.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+    });
+
+    // 2. Логика 3-шагового квиза
+    const quizData = {
+      service: 'Оклейка антигравийной плёнкой',
+      channel: 'WhatsApp'
+    };
+
+    const stepIndicator = document.getElementById('quiz-step-indicator');
+    const step1 = document.getElementById('quiz-step-1');
+    const step2 = document.getElementById('quiz-step-2');
+    const step3 = document.getElementById('quiz-step-3');
+
+    function setQuizStep(stepNum) {
+      stepIndicator.textContent = `${stepNum} / 3`;
+      step1.classList.toggle('hidden', stepNum !== 1);
+      step2.classList.toggle('hidden', stepNum !== 2);
+      step3.classList.toggle('hidden', stepNum !== 3);
+    }
+
+    document.querySelectorAll('#quiz-services .quiz-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#quiz-services .quiz-option').forEach(b => {
+          b.classList.remove('selected');
+          b.classList.add('text-neutral-200');
+        });
+        btn.classList.add('selected');
+        btn.classList.remove('text-neutral-200');
+        quizData.service = btn.dataset.val;
+      });
+    });
+
+    document.querySelectorAll('#quiz-channels .quiz-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#quiz-channels .quiz-option').forEach(b => {
+          b.classList.remove('selected');
+          b.classList.add('text-neutral-200');
+        });
+        btn.classList.add('selected');
+        btn.classList.remove('text-neutral-200');
+        quizData.channel = btn.dataset.val;
+      });
+    });
+
+    document.getElementById('quiz-next-1').addEventListener('click', () => setQuizStep(2));
+    document.getElementById('quiz-prev-2').addEventListener('click', () => setQuizStep(1));
+    document.getElementById('quiz-next-2').addEventListener('click', () => setQuizStep(3));
+    document.getElementById('quiz-prev-3').addEventListener('click', () => setQuizStep(2));
+
+    step3.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('quiz-name').value.trim();
+      const car = document.getElementById('quiz-car-model').value.trim() || 'авто';
+      showToast(`Спасибо, ${name}! Расчёт по услуге «${quizData.service}» для ${car} отправим ${quizData.channel}.`);
+      step3.reset();
+      document.getElementById('quiz-car-model').value = '';
+      setQuizStep(1);
+    });
+
+    // 3. Модальное окно обратного звонка
+    const cbModal = document.getElementById('callback-modal');
+    let cbChannel = 'Телефон';
+
+    document.querySelectorAll('#modal-channel-group .quiz-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#modal-channel-group .quiz-option').forEach(b => {
+          b.classList.remove('selected');
+          b.classList.add('text-neutral-300');
+        });
+        btn.classList.add('selected');
+        btn.classList.remove('text-neutral-300');
+        cbChannel = btn.dataset.ch;
+      });
+    });
+
+    document.querySelectorAll('[data-open-callback]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        cbModal.classList.remove('hidden');
+        cbModal.classList.add('flex');
+      });
+    });
+
+    document.getElementById('close-callback-btn').addEventListener('click', () => {
+      cbModal.classList.add('hidden');
+      cbModal.classList.remove('flex');
+    });
+
+    cbModal.addEventListener('click', (e) => {
+      if (e.target === cbModal) {
+        cbModal.classList.add('hidden');
+        cbModal.classList.remove('flex');
+      }
+    });
+
+    document.getElementById('callback-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('cb-name').value.trim();
+      cbModal.classList.add('hidden');
+      cbModal.classList.remove('flex');
+      showToast(`Спасибо, ${name}! Свяжемся с вами через ${cbChannel} в ближайшее время.`);
+      e.target.reset();
+    });
+
+    // 4. Форма бесплатной консультации
+    document.getElementById('consult-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      showToast('Заявка на консультацию принята! Специалист скоро свяжется с вами.');
+      e.target.reset();
+    });
+
+    // 5. Галерея работ и лайтбокс
+    const showMoreBtn = document.getElementById('show-more-works');
+    showMoreBtn.addEventListener('click', () => {
+      document.querySelectorAll('.extra-work').forEach(el => el.classList.remove('hidden'));
+      showMoreBtn.classList.add('hidden');
+    });
+
+    const lightboxModal = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+
+    document.querySelectorAll('.gal-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const img = card.querySelector('img');
+        lightboxImg.src = img.src;
+        lightboxCaption.textContent = card.dataset.caption || '';
+        lightboxModal.classList.remove('hidden');
+        lightboxModal.classList.add('flex');
+      });
+    });
+
+    document.getElementById('close-lightbox-btn').addEventListener('click', () => {
+      lightboxModal.classList.add('hidden');
+      lightboxModal.classList.remove('flex');
+    });
+
+    lightboxModal.addEventListener('click', (e) => {
+      if (e.target === lightboxModal) {
+        lightboxModal.classList.add('hidden');
+        lightboxModal.classList.remove('flex');
+      }
+    });
+  </script>
+</body>
+</html>
